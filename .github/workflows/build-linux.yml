@@ -1,0 +1,32 @@
+name: Build Linux x86_64 Executable
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
+
+    - name: Install dependencies (SDL2)
+      run: |
+        sudo apt update
+        sudo apt install -y libsdl2-dev build-essential
+
+    - name: Build Linux x86_64 executable
+      run: make TARGET=PC
+
+    - name: Upload Linux executable
+      uses: actions/upload-artifact@v3
+      with:
+        name: linux-x86_64-executable
+        path: ShadedTriangle_PC
+
