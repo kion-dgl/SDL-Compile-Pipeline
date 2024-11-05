@@ -1,5 +1,8 @@
 #include <SDL2/SDL.h>
 #include <GLES2/gl2.h>
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
 #include <stdio.h>
 
 const char *vertexShaderSource = 
