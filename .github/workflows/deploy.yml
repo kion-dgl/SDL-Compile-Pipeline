@@ -3,7 +3,7 @@ name: Build and Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # Or whichever branch you want to deploy from
+      - main  # Trigger on pushes to the main branch
 
 jobs:
   build:
@@ -19,7 +19,9 @@ jobs:
 
       - name: Compile with Emscripten
         run: |
-          emcc main.c -s USE_SDL=2 -s USE_WEBGL2=1 -o index.html
+          # Compile with additional options for WebGL compatibility
+          emcc main.c -s USE_SDL=2 -s USE_WEBGL2=1 -s FULL_ES2=1 -o index.html
+          # Optional: You can enable additional debug information by adding -s ASSERTIONS=1
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v1
