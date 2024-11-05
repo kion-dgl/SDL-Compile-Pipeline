@@ -20,7 +20,7 @@ jobs:
       - name: Compile for Web using Makefile
         run: |
           # Run the Makefile target to build for web
-          make web
+          make webgl
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v1
