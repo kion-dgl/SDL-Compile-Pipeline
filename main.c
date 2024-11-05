@@ -9,18 +9,16 @@
 SDL_Window* window;
 SDL_GLContext glContext;
 
-const char* vertexShaderSource = R"(
-    attribute vec2 position;
-    void main() {
-        gl_Position = vec4(position, 0.0, 1.0);
-    }
-)";
+const char* vertexShaderSource = 
+    "attribute vec2 position;\n"
+    "void main() {\n"
+    "    gl_Position = vec4(position, 0.0, 1.0);\n"
+    "}\n";
 
-const char* fragmentShaderSource = R"(
-    void main() {
-        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Red color
-    }
-)";
+const char* fragmentShaderSource = 
+    "void main() {\n"
+    "    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"  // Red color
+    "}\n";
 
 GLuint createShader(GLenum type, const char* source) {
     GLuint shader = glCreateShader(type);
