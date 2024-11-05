@@ -19,8 +19,8 @@ jobs:
 
       - name: Compile with Emscripten
         run: |
-          emcc main.c -s USE_SDL=2 -s USE_WEBGL2=1 -o index.html --preload-file assets
-          # The --preload-file option is for any assets you need to package with the build (e.g., textures, shaders)
+          emcc main.c -s USE_SDL=2 -s USE_WEBGL2=1 -o index.html
+          # Removed --preload-file assets because no assets directory exists
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
