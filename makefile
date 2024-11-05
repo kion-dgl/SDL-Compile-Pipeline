@@ -17,8 +17,11 @@ LDFLAGS_PC = -lSDL2 -lGLESv2
 EMCC = emcc
 CFLAGS_WEBGL = -s USE_SDL=2 -s FULL_ES2=1
 
-# Default target builds both PC and WebGL
-all: linux webgl
+# Default target builds only the Linux executable
+all: linux
+
+# Target to build both Linux and WebGL
+all_targets: linux webgl
 
 # PC build target
 linux: $(EXECUTABLE_PC)
