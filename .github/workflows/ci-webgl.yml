@@ -18,6 +18,6 @@ jobs:
         with:
           version: latest
 
-      - name: Compile with Emscripten
+      - name: Compile WebGL target using Makefile
         run: |
-          emcc main.c -s USE_SDL=2 -s USE_WEBGL2=1 -o index.html
+          make webgl

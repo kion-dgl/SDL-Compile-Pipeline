@@ -19,11 +19,10 @@ jobs:
         sudo apt install -y libsdl2-dev build-essential
 
     - name: Build Linux x86_64 executable
-      run: make TARGET=PC
+      run: make linux  # Target only the linux build
 
     - name: Upload Linux executable
       uses: actions/upload-artifact@v3
       with:
         name: linux-x86_64-executable
         path: ShadedTriangle_PC
-

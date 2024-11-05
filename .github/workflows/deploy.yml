@@ -17,16 +17,15 @@ jobs:
         with:
           version: latest
 
-      - name: Compile with Emscripten
+      - name: Compile for Web using Makefile
         run: |
-          # Compile with additional options for WebGL compatibility
-          emcc main.c -s USE_SDL=2 -s USE_WEBGL2=1 -s FULL_ES2=1 -o index.html
-          # Optional: You can enable additional debug information by adding -s ASSERTIONS=1
+          # Run the Makefile target to build for web
+          make web
 
       - name: Upload artifact for GitHub Pages
         uses: actions/upload-pages-artifact@v1
         with:
-          path: ./  # Path to the folder containing index.html and other files
+          path: ./docs  # Upload the contents of the `docs` folder where `index.html` is located
 
   deploy:
     runs-on: ubuntu-latest
