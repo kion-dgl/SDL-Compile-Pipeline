@@ -21,15 +21,14 @@ jobs:
           cd vdpm
           ./bootstrap-vitasdk.sh
           ./install-all.sh
-          export VITASDK=/usr/local/vitasdk
-          export PATH=$VITASDK/bin:$PATH
+          echo 'export VITASDK=/usr/local/vitasdk' >> ~/.bashrc
+          echo 'export PATH=$VITASDK/bin:$PATH' >> ~/.bashrc
+          source ~/.bashrc
           echo "VITASDK is set to $VITASDK"
-        
+
       - name: Compile for PS Vita
-        env:
-          VITASDK: /usr/local/vitasdk
         run: |
-          source $VITASDK/shell.sh
+          source ~/.bashrc
           mkdir -p build && cd build
           cmake -DVITA=ON ..
           make
