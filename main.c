@@ -4,24 +4,25 @@
 #include <emscripten.h>
 #endif
 #include <stdio.h>
+#include <stdlib.h>
 
-const char *vertexShaderSource = 
-    "attribute vec4 a_Position;\n"
-    "attribute vec4 a_Color;\n"
-    "varying vec4 v_Color;\n"
-    "void main() {\n"
-    "   gl_Position = a_Position;\n"
-    "   v_Color = a_Color;\n"
-    "}\n";
+SDL_Window* window;
+SDL_GLContext glContext;
 
-const char *fragmentShaderSource = 
-    "precision mediump float;\n"
-    "varying vec4 v_Color;\n"
-    "void main() {\n"
-    "   gl_FragColor = v_Color;\n"
-    "}\n";
+const char* vertexShaderSource = R"(
+    attribute vec2 position;
+    void main() {
+        gl_Position = vec4(position, 0.0, 1.0);
+    }
+)";
 
-GLuint compileShader(GLenum type, const char *source) {
+const char* fragmentShaderSource = R"(
+    void main() {
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); // Red color
+    }
+)";
+
+GLuint createShader(GLenum type, const char* source) {
     GLuint shader = glCreateShader(type);
     glShaderSource(shader, 1, &source, NULL);
     glCompileShader(shader);
@@ -32,9 +33,9 @@ GLuint compileShader(GLenum type, const char *source) {
         GLint infoLen = 0;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
         if (infoLen > 1) {
-            char *infoLog = (char *)malloc(infoLen);
+            char* infoLog = (char*)malloc(infoLen);
             glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
-            printf("Error compiling shader:\n%s\n", infoLog);
+            printf("Error compiling shader: %s\n", infoLog);
             free(infoLog);
         }
         glDeleteShader(shader);
@@ -44,8 +45,8 @@ GLuint compileShader(GLenum type, const char *source) {
 }
 
 GLuint createProgram(const char *vertexSource, const char *fragmentSource) {
-    GLuint vertexShader = compileShader(GL_VERTEX_SHADER, vertexSource);
-    GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
+    GLuint vertexShader = createShader(GL_VERTEX_SHADER, vertexSource);
+    GLuint fragmentShader = createShader(GL_FRAGMENT_SHADER, fragmentSource);
     GLuint program = glCreateProgram();
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
@@ -59,7 +60,7 @@ GLuint createProgram(const char *vertexSource, const char *fragmentSource) {
         if (infoLen > 1) {
             char *infoLog = (char *)malloc(infoLen);
             glGetProgramInfoLog(program, infoLen, NULL, infoLog);
-            printf("Error linking program:\n%s\n", infoLog);
+            printf("Error linking program: %s\n", infoLog);
             free(infoLog);
         }
         glDeleteProgram(program);
@@ -68,16 +69,41 @@ GLuint createProgram(const char *vertexSource, const char *fragmentSource) {
     return program;
 }
 
-int main(int argc, char *argv[]) {
+void initGL() {
+    GLuint program = createProgram(vertexShaderSource, fragmentShaderSource);
+    glUseProgram(program);
+
+    GLfloat vertices[] = {
+         0.0f,  0.5f,  // Top vertex
+        -0.5f, -0.5f,  // Bottom-left vertex
+         0.5f, -0.5f   // Bottom-right vertex
+    };
+
+    GLuint VBO;
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    GLint positionLoc = glGetAttribLocation(program, "position");
+    glEnableVertexAttribArray(positionLoc);
+    glVertexAttribPointer(positionLoc, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (void*)0);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+void render() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    SDL_GL_SwapWindow(window);
+}
+
+void main_loop() {
+    render();
+}
+
+int main() {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         printf("SDL_Init Error: %s\n", SDL_GetError());
-        return 1;
-    }
-
-    SDL_Window *window = SDL_CreateWindow("Shaded Triangle", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_OPENGL);
-    if (window == NULL) {
-        printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
-        SDL_Quit();
         return 1;
     }
 
@@ -85,56 +111,41 @@ int main(int argc, char *argv[]) {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
-    SDL_GLContext context = SDL_GL_CreateContext(window);
-    if (context == NULL) {
+    window = SDL_CreateWindow("Shaded Triangle", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_OPENGL);
+    if (window == NULL) {
+        printf("SDL_CreateWindow Error: %s\n", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
+    glContext = SDL_GL_CreateContext(window);
+    if (glContext == NULL) {
         printf("SDL_GL_CreateContext Error: %s\n", SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
         return 1;
     }
 
-    GLuint program = createProgram(vertexShaderSource, fragmentShaderSource);
-    glUseProgram(program);
+    initGL();
 
-    // Define triangle vertices and colors (positions are in normalized device coordinates)
-    GLfloat vertices[] = {
-         0.0f,  0.5f, 0.0f, // Top vertex
-         1.0f,  0.0f, 0.0f, // Red color
-        -0.5f, -0.5f, 0.0f, // Bottom-left vertex
-         0.0f,  1.0f, 0.0f, // Green color
-         0.5f, -0.5f, 0.0f, // Bottom-right vertex
-         0.0f,  0.0f, 1.0f  // Blue color
-    };
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop(main_loop, 0, 1);
+#else
+    int running = 1;
+    SDL_Event event;
+    while (running) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = 0;
+            }
+        }
+        main_loop();
+    }
+#endif
 
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    GLint positionLoc = glGetAttribLocation(program, "a_Position");
-    GLint colorLoc = glGetAttribLocation(program, "a_Color");
-
-    glEnableVertexAttribArray(positionLoc);
-    glVertexAttribPointer(positionLoc, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)0);
-
-    glEnableVertexAttribArray(colorLoc);
-    glVertexAttribPointer(colorLoc, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
-
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-    SDL_GL_SwapWindow(window);
-
-    SDL_Delay(5000);
-
-    glDeleteBuffers(1, &vbo);
-    glDeleteProgram(program);
-    SDL_GL_DeleteContext(context);
+    SDL_GL_DeleteContext(glContext);
     SDL_DestroyWindow(window);
     SDL_Quit();
 
     return 0;
 }
-
