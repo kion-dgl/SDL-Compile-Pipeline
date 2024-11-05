@@ -1,9 +1,6 @@
-name: Build Linux x86_64 Executable
+name: Compile Linux x86_64 Executable
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
