@@ -1,0 +1,31 @@
+name: Build and Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # Or the branch you want to trigger on
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Emscripten
+        uses: matthewfeickert/setup-emsdk@v10
+        with:
+          emsdk_version: "latest"
+
+      - name: Compile with Emscripten
+        run: |
+          source ./emsdk/emsdk_env.sh
+          emcc main.c -s USE_SDL=2 -s USE_WEBGL2=1 -o index.html --preload-file assets
+          # The --preload-file option is for any assets you need to package with the build (e.g., textures, shaders)
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: . # Deploy all generated files in the current directory
+
