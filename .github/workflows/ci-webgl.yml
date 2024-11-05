@@ -1,0 +1,23 @@
+name: Compile WebGL
+
+on:
+  pull_request:
+    branches:
+      - main  # This will trigger the action on pull requests targeting the main branch
+
+jobs:
+  compile-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+
+      - name: Compile with Emscripten
+        run: |
+          emcc main.c -s USE_SDL=2 -s USE_WEBGL2=1 -o index.html
